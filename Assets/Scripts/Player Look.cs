@@ -9,8 +9,8 @@ public class PlayerLook : MonoBehaviour
 
     private float xRotation = 0f;
 
-    public float xSensitivity = 30f;
-    public float ySensitivity = 30f;
+    public float xSensitivity = 15f;
+    public float ySensitivity = 15f;
     // Start is called before the first frame update
     public void LookManagement(Vector2 input)
     {

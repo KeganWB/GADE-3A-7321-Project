@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     private bool IsGrounded;
     public float _gravity = -9.8f;
     public float _jumpHeight = 3f;
+    private bool _carryingBlueFlag = false;
 
     void Start()
     {
@@ -52,5 +53,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void CarryBlueFlag()
+    {
+        _carryingBlueFlag = true;
+    }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        
+        if (other.CompareTag("RedFlagBase") && _carryingBlueFlag)
+        {
+            GameManager.Instance.PlayerReturnedBlueFlagAtBase();
+            _carryingBlueFlag = false;
+        }
+    }
 }

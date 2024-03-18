@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class InputManager : MonoBehaviour
 {
     private PlayerInput _playerInput;
-    private PlayerInput.WalkingActions _movement;
+    public PlayerInput.WalkingActions _movement;
     private PlayerController _playerController;
     private PlayerLook _playerLook;
     
@@ -16,7 +16,7 @@ public class InputManager : MonoBehaviour
         _movement = _playerInput.walking;
         
         _playerController = GetComponent<PlayerController>();
-        _movement.Jumping.performed += ctx => _playerController.Jump(); // Pass ctx to the Jump method
+        _movement.Jumping.performed += ctx => _playerController.Jump(); //Pass ctx to the Jump method
 
         _playerLook = GetComponent<PlayerLook>();
     }
