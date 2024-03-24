@@ -23,6 +23,11 @@ public class GameManager : MonoBehaviour
     
     private int _winningScore = 1;
 
+    void Start()
+    {
+        _endGameText = GameObject.FindGameObjectWithTag("EndGameText").GetComponent<TextMeshProUGUI>();
+        _endGameText.enabled = false;
+    }
     public static GameManager Instance
     {
         get
@@ -71,6 +76,7 @@ public class GameManager : MonoBehaviour
     //Called when the enemy AI picks up the red flag
     public void EnemyPickedUpRedFlag(GameObject flagObject)
     {
+        Debug.Log("enemy picked up ()");
         _redFlag = flagObject;
         _redFlagPickedUp = true;
 
@@ -134,7 +140,7 @@ public class GameManager : MonoBehaviour
             _endGameText.enabled = true;
             _endGameText.text = "You Lose!";
         }
-        //Need to show the pop up for game over
+        
         Debug.Log("Game Over");
     }
 }

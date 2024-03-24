@@ -78,8 +78,10 @@ public class EnemyAI : MonoBehaviour
 
     private void ReturnFlag()
     {
+        Debug.Log("returning");
         if (_blueFlagBaseTransform != null)
         {
+            Debug.Log("super return");
             _navMeshAgent.SetDestination(_blueFlagBaseTransform.position);
         }
     }
@@ -113,7 +115,7 @@ public class EnemyAI : MonoBehaviour
         Debug.Log("collided");
         if (other.CompareTag("RedFlag"))
         {
-            GameManager.Instance.EnemyPickedUpRedFlag(gameObject);
+            GameManager.Instance.EnemyPickedUpRedFlag(other.gameObject);
             ChangeState(EnemyState.ReturnFlag);
            
             Debug.Log("collided with red flag");
@@ -140,36 +142,12 @@ public class EnemyAI : MonoBehaviour
         {
             
             GameManager.Instance.EnemyReturnedRedFlagAtBase();
+            ChangeState(EnemyState.ChasePlayer);
         }
         
         
     }
-/*private void OnTriggerStay(Collider other)
-    {
-        Debug.Log("collided");
-        if (other.CompareTag("RedFlag"))
-        {
-            Debug.Log("collided with red flag");
-            PickUpRedFlag(other.transform);
-        }
-    }*/
-   
 
-   /* public void PickUpRedFlag(Transform flagTransform)
-    {
-        Debug.Log("Picked up  method");
-        //Parent the red flag to the enemy
-        _redFlagTransform = flagTransform;
-        _redFlagTransform.parent = flagTransform.transform;
-        // Disable the collider of the red flag to prevent further collisions
-        Collider collider = _redFlagTransform.GetComponent<Collider>();
-        if (collider != null)
-        {
-            collider.enabled = false;
-        }
-        // Switch to returning the red flag
-        ChangeState(EnemyState.ReturnFlag);
-    }*/
 }
 
 public enum EnemyState
