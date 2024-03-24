@@ -6,7 +6,7 @@ using UnityEngine;
 public class PlayerUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _promptText;
-    // Start is called before the first frame update
+    //Start is called before the first frame update
     public static PlayerUI Instance { get; private set; }
     void Start()
     {

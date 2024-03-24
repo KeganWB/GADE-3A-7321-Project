@@ -1,28 +1,23 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 
 public class PlayerInteract : MonoBehaviour
 {
     private Camera _cam;
-    [SerializeField]
-    private LayerMask _mask;
+    [SerializeField] private LayerMask _mask;
 
     private PlayerUI _playerUI;
     private InputManager _inputManager;
-    private PlayerController _playerController; 
+    private PlayerController _playerController;
 
-    [SerializeField]
-    private float _distance = 3f;
+    [SerializeField] private float _distance = 3f;
 
     void Start()
     {
         _cam = GetComponent<PlayerLook>()._camera;
         _playerUI = GetComponent<PlayerUI>();
         _inputManager = GetComponent<InputManager>();
-        _playerController = GetComponent<PlayerController>(); 
+        _playerController = GetComponent<PlayerController>();
     }
 
     void Update()
@@ -40,7 +35,7 @@ public class PlayerInteract : MonoBehaviour
                 _playerUI.UpdatePromptText(_interactable._prompt);
                 if (_inputManager._movement.Interact.triggered)
                 {
-                    _interactable.BaseInteract();
+                    _interactable.Interact(); 
                 }
             }
         }
@@ -56,19 +51,33 @@ public class PlayerInteract : MonoBehaviour
         {
             PlayerUI.Instance.UpdatePromptText("Press F to return the Red Flag");
         }
+        if (other.CompareTag("Enemy") && GameManager.Instance._redFlagPickedUp)
+        {
+            Debug.Log("Collided with enemy carrying red flag");
+
+            //Unparent the blue flag from the player
+            GameManager.Instance._redFlag.transform.parent = null;
+
+            //Reset _blueFlagPickedUp to false
+            GameManager.Instance._redFlagPickedUp = false;
+
+            //Move the blue flag back to its original position
+            GameManager.Instance._redFlag.transform.position = GameManager.Instance._redFlagBasePosition.position;
+            GameManager.Instance._redFlag.transform.rotation = GameManager.Instance._redFlagBasePosition.rotation;
+        }
     }
 
     private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("BlueFlag") && Input.GetKeyDown(KeyCode.F))
         {
-            _playerController.CarryBlueFlag(); 
-            other.GetComponent<FlagInteract>().BaseInteract();
+            _playerController.CarryBlueFlag();
+            other.GetComponent<FlagInteract>().Interact(); 
             PlayerUI.Instance.UpdatePromptText("");
         }
         else if (other.CompareTag("RedFlag") && Input.GetKeyDown(KeyCode.F))
         {
-            other.GetComponent<FlagInteract>().BaseInteract();
+            other.GetComponent<FlagInteract>().Interact(); 
             PlayerUI.Instance.UpdatePromptText("");
         }
     }

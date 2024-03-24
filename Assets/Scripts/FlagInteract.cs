@@ -2,22 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class FlagInteract : Interactable
 {
-    public string flagColor; 
+    public string _flagColor; 
 
-    protected override void Interact()
+    public override void Interact()
     {
-        if (flagColor == "Blue")
+        if (_flagColor == "Blue" )
         {
             GameManager.Instance.PlayerPickedUpBlueFlag(gameObject);
         }
-        else if (flagColor == "Red")
+        else if (_flagColor == "Red")
         {
-            GameManager.Instance.EnemyReturnedRedFlagAtBase();
+            //Reset the red flag to its spawn point
+            transform.position = GameManager.Instance._redFlagSpawnPoint.position;
         }
     }
 }
-
-

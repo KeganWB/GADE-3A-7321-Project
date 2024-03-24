@@ -8,7 +8,7 @@ public abstract class Interactable : MonoBehaviour
 
     public string _prompt;
 
-    protected virtual void Interact()
+    public virtual void Interact()
     {
         
     }

@@ -3,11 +3,9 @@ using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    public Transform _playerTransform; //Reference to the player's transform
-    public Transform _blueFlagTransform; //Reference to the blue flag's transform
-    public Transform _redFlagTransform; //Reference to the red flag's transform
-    public Transform _blueFlagBaseTransform; //Reference to the blue flag base's transform
-    public Transform _redFlagBaseTransform; //Reference to the red flag base's transform
+    public Transform _playerTransform;
+    public Transform _redFlagTransform;
+    public Transform _blueFlagBaseTransform;
 
     private NavMeshAgent _navMeshAgent;
     private EnemyState _currentState;
@@ -15,31 +13,50 @@ public class EnemyAI : MonoBehaviour
     private void Start()
     {
         _navMeshAgent = GetComponent<NavMeshAgent>();
-        ChangeState(EnemyState.ChasePlayer); 
+        ChangeState(EnemyState.ReturnFlag);
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         switch (_currentState)
         {
-            case EnemyState.Idle:
-                Idle();
-                break;
             case EnemyState.ChasePlayer:
-                ChasePlayer();
+                UpdateChasePlayerState();
                 break;
-            case EnemyState.CarryFlag:
-                CarryFlag();
+            case EnemyState.ChaseFlag:
+                UpdateChaseFlagState();
                 break;
             case EnemyState.ReturnFlag:
-                ReturnFlag();
+                UpdateReturnFlagState();
                 break;
         }
     }
 
-    private void Idle()
+    private void UpdateChasePlayerState()
     {
-        //Needs code
+        ChasePlayer();
+        if (ShouldSwitchToChaseFlag())
+        {
+            ChangeState(EnemyState.ChaseFlag);
+        }
+    }
+
+    private void UpdateChaseFlagState()
+    {
+        ChaseFlag();
+        if (ShouldSwitchToReturnFlag())
+        {
+            ChangeState(EnemyState.ReturnFlag);
+        }
+    }
+
+    private void UpdateReturnFlagState()
+    {
+        ReturnFlag();
+        if (ShouldSwitchToChasePlayer())
+        {
+            ChangeState(EnemyState.ChasePlayer);
+        }
     }
 
     private void ChasePlayer()
@@ -50,44 +67,114 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private void CarryFlag()
+    private void ChaseFlag()
     {
         if (_redFlagTransform != null)
         {
-            _navMeshAgent.SetDestination(_redFlagBaseTransform.position);
+            _navMeshAgent.SetDestination(_redFlagTransform.position);
         }
+        
     }
 
     private void ReturnFlag()
     {
-        if (_blueFlagTransform != null)
+        if (_blueFlagBaseTransform != null)
         {
             _navMeshAgent.SetDestination(_blueFlagBaseTransform.position);
         }
     }
-    
-    //For the enemy AI, need to update code
-    public void PickUpRedFlag(Transform flagTransform)
+
+    private bool ShouldSwitchToChaseFlag()
     {
-        _redFlagTransform = flagTransform;
-        ChangeState(EnemyState.CarryFlag);
-    }
-    
-    public void ReturnBlueFlag()
-    {
-        ChangeState(EnemyState.ReturnFlag);
+        //If the enemy is close to the red flag
+        return Vector3.Distance(transform.position, _redFlagTransform.position) < 5f;
     }
 
-    public void ChangeState(EnemyState newState)
+    private bool ShouldSwitchToReturnFlag()
     {
+        //If the red flag is picked up
+        return _redFlagTransform != null && _redFlagTransform.parent == transform;
+    }
+
+    private bool ShouldSwitchToChasePlayer()
+    {
+        //If the enemy has the red flag and is far from the blue flag base
+        return _redFlagTransform != null && Vector3.Distance(transform.position, _blueFlagBaseTransform.position) > 5f;
+    }
+
+    private void ChangeState(EnemyState newState)
+    {
+        Debug.Log("Changing state from " + _currentState + " to " + newState);
         _currentState = newState;
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("collided");
+        if (other.CompareTag("RedFlag"))
+        {
+            GameManager.Instance.EnemyPickedUpRedFlag(gameObject);
+            ChangeState(EnemyState.ReturnFlag);
+           
+            Debug.Log("collided with red flag");
+            //PickUpRedFlag(other.transform);
+        }
+
+       
+        if (other.CompareTag("Player") && GameManager.Instance._blueFlagPickedUp)
+        {
+            Debug.Log("Collided with player carrying blue flag");
+
+            //Unparent the blue flag from the player
+            GameManager.Instance._blueFlag.transform.parent = null;
+
+            //Reset _blueFlagPickedUp to false
+            GameManager.Instance._blueFlagPickedUp = false;
+
+            //Move the blue flag back to its original position
+            GameManager.Instance._blueFlag.transform.position = GameManager.Instance._blueFlagBasePosition.position;
+            GameManager.Instance._blueFlag.transform.rotation = GameManager.Instance._blueFlagBasePosition.rotation;
+        }
+        
+        if (other.CompareTag("BlueFlagBase") && GameManager.Instance._redFlagPickedUp)
+        {
+            
+            GameManager.Instance.EnemyReturnedRedFlagAtBase();
+        }
+        
+        
+    }
+/*private void OnTriggerStay(Collider other)
+    {
+        Debug.Log("collided");
+        if (other.CompareTag("RedFlag"))
+        {
+            Debug.Log("collided with red flag");
+            PickUpRedFlag(other.transform);
+        }
+    }*/
+   
+
+   /* public void PickUpRedFlag(Transform flagTransform)
+    {
+        Debug.Log("Picked up  method");
+        //Parent the red flag to the enemy
+        _redFlagTransform = flagTransform;
+        _redFlagTransform.parent = flagTransform.transform;
+        // Disable the collider of the red flag to prevent further collisions
+        Collider collider = _redFlagTransform.GetComponent<Collider>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+        // Switch to returning the red flag
+        ChangeState(EnemyState.ReturnFlag);
+    }*/
 }
 
 public enum EnemyState
 {
-    Idle,
     ChasePlayer,
-    CarryFlag,
+    ChaseFlag,
     ReturnFlag
 }

@@ -9,6 +9,10 @@ TagManager:
   - RedFlag
   - BlueFlag
   - Enemy
+  - RedFlagSpawn
+  - BlueFlagSpawn
+  - PlayerSpawn
+  - EnemySpawn
   layers:
   - Default
   - TransparentFX

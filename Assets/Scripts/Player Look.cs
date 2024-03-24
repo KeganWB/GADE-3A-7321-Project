@@ -11,7 +11,7 @@ public class PlayerLook : MonoBehaviour
 
     public float xSensitivity = 15f;
     public float ySensitivity = 15f;
-    // Start is called before the first frame update
+    //Start is called before the first frame update
     public void LookManagement(Vector2 input)
     {
         float _mouseX = input.x;
@@ -23,7 +23,7 @@ public class PlayerLook : MonoBehaviour
         transform.Rotate((Vector3.up * (_mouseX*Time.deltaTime * xSensitivity)));
     }
 
-    // Update is called once per frame
+    //Update is called once per frame
     void Update()
     {
         
