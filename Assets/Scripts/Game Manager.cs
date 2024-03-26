@@ -20,8 +20,12 @@ public class GameManager : MonoBehaviour
     public GameObject _blueFlag;
     public GameObject _redFlag;
     public Transform _redFlagSpawnPoint;
+
+    public Transform _redFlagDropped;
+    public Transform _blueFlagDropped;
+
     
-    private int _winningScore = 1;
+    private int _winningScore = 5;
 
     void Start()
     {

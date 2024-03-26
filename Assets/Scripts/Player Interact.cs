@@ -51,7 +51,7 @@ public class PlayerInteract : MonoBehaviour
         {
             PlayerUI.Instance.UpdatePromptText("Press F to return the Red Flag");
         }
-        if (other.CompareTag("Enemy") && GameManager.Instance._redFlagPickedUp)
+        else if (other.CompareTag("Enemy") && GameManager.Instance._redFlagPickedUp)
         {
             Debug.Log("Collided with enemy carrying red flag");
 

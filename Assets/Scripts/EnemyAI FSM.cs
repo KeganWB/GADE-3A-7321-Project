@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,144 +11,215 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent _navMeshAgent;
     private EnemyState _currentState;
 
+    public bool _isRedFlagPickedUp;
+    public bool _isBlueFlagPickedUp;
+
+    public bool _redFlagIsDropped  = false;
+    public bool _blueFlagIsDropped = false;
+
     private void Start()
     {
         _navMeshAgent = GetComponent<NavMeshAgent>();
-        ChangeState(EnemyState.ReturnFlag);
+        ChangeState(EnemyState.ChaseFlag);
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
+        _isRedFlagPickedUp = GameManager.Instance._redFlagPickedUp;
+        _isBlueFlagPickedUp = GameManager.Instance._blueFlagPickedUp;
+
         switch (_currentState)
         {
             case EnemyState.ChasePlayer:
-                UpdateChasePlayerState();
+                ChasePlayer();
                 break;
+
             case EnemyState.ChaseFlag:
-                UpdateChaseFlagState();
+                ChaseFlag();
                 break;
+
             case EnemyState.ReturnFlag:
-                UpdateReturnFlagState();
+                ReturnFlag();
                 break;
         }
+
+        UpdateState();
     }
 
-    private void UpdateChasePlayerState()
+    private void UpdateState()
     {
-        ChasePlayer();
-        if (ShouldSwitchToChaseFlag())
+        if (_currentState == EnemyState.ChasePlayer && ShouldSwitchToChaseFlag())
         {
             ChangeState(EnemyState.ChaseFlag);
         }
-    }
-
-    private void UpdateChaseFlagState()
-    {
-        ChaseFlag();
-        if (ShouldSwitchToReturnFlag())
+            
+        else if (_currentState == EnemyState.ChaseFlag && ShouldSwitchToReturnFlag())
         {
             ChangeState(EnemyState.ReturnFlag);
         }
-    }
-
-    private void UpdateReturnFlagState()
-    {
-        ReturnFlag();
-        if (ShouldSwitchToChasePlayer())
+            
+        else if (_currentState == EnemyState.ReturnFlag && ShouldSwitchToChasePlayer())
         {
             ChangeState(EnemyState.ChasePlayer);
+        }
+        else if (_currentState == EnemyState.ReturnFlag && ShouldSwitchToChaseFlag())
+        {
+            ChangeState(EnemyState.ChaseFlag);
+        }
+            
+        else if (_currentState == EnemyState.ChaseFlag && ShouldSwitchToChasePlayer())
+        {
+            ChangeState(EnemyState.ChasePlayer);
+        }
+        else if (_currentState == EnemyState.ChasePlayer && ShouldSwitchToReturnFlag())
+        {
+            ChangeState(EnemyState.ReturnFlag);
         }
     }
 
     private void ChasePlayer()
     {
-        if (_playerTransform != null)
-        {
-            _navMeshAgent.SetDestination(_playerTransform.position);
-        }
+        
+        _navMeshAgent.SetDestination(GameManager.Instance._blueFlag.transform.position);
+        
     }
 
     private void ChaseFlag()
     {
-        if (_redFlagTransform != null)
-        {
+        if (_redFlagTransform != null && !_isRedFlagPickedUp && !_isBlueFlagPickedUp)
             _navMeshAgent.SetDestination(_redFlagTransform.position);
-        }
-        
     }
 
     private void ReturnFlag()
     {
-        Debug.Log("returning");
-        if (_blueFlagBaseTransform != null)
-        {
-            Debug.Log("super return");
+        if (_blueFlagBaseTransform != null && _isRedFlagPickedUp)
             _navMeshAgent.SetDestination(_blueFlagBaseTransform.position);
-        }
+        
     }
 
     private bool ShouldSwitchToChaseFlag()
     {
-        //If the enemy is close to the red flag
-        return Vector3.Distance(transform.position, _redFlagTransform.position) < 5f;
+        if (!_isBlueFlagPickedUp && !_isRedFlagPickedUp)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private bool ShouldSwitchToReturnFlag()
     {
-        //If the red flag is picked up
-        return _redFlagTransform != null && _redFlagTransform.parent == transform;
+        //distances for base and player
+        float distanceToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
+        float distanceToBase = Vector3.Distance(transform.position, _blueFlagBaseTransform.position);
+       
+        
+        //Check if both flags are picked up and the enemy is closer to the base than the player
+        if (_isRedFlagPickedUp && _isBlueFlagPickedUp && distanceToBase < distanceToPlayer)
+            
+        {
+            return true;
+        }
+
+        if (_isRedFlagPickedUp && !_isBlueFlagPickedUp)
+        {
+            return true;
+        }
+
+        return false;
+
+        
     }
+
 
     private bool ShouldSwitchToChasePlayer()
     {
-        //If the enemy has the red flag and is far from the blue flag base
-        return _redFlagTransform != null && Vector3.Distance(transform.position, _blueFlagBaseTransform.position) > 5f;
+        //distances for base and player
+        float distanceToPlayer = Vector3.Distance(transform.position, _playerTransform.position);
+        float distanceToBase = Vector3.Distance(transform.position, _blueFlagBaseTransform.position);
+        
+        //Check if the enemy is closer to the player than the base
+        if (_isRedFlagPickedUp && _isBlueFlagPickedUp && distanceToPlayer < distanceToBase)
+        {
+            return true;
+            
+        }
+        if (_blueFlagIsDropped)
+        {
+            return true;
+            
+        }
+        
+        if (_isBlueFlagPickedUp)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private void ChangeState(EnemyState newState)
     {
-        Debug.Log("Changing state from " + _currentState + " to " + newState);
         _currentState = newState;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("collided");
         if (other.CompareTag("RedFlag"))
         {
+            Debug.Log("Picked up red flag"); 
             GameManager.Instance.EnemyPickedUpRedFlag(other.gameObject);
-            ChangeState(EnemyState.ReturnFlag);
+            _isRedFlagPickedUp = true;
            
-            Debug.Log("collided with red flag");
-            //PickUpRedFlag(other.transform);
         }
 
-       
-        if (other.CompareTag("Player") && GameManager.Instance._blueFlagPickedUp)
+        if (other.CompareTag("Player") && _isBlueFlagPickedUp)
         {
-            Debug.Log("Collided with player carrying blue flag");
-
-            //Unparent the blue flag from the player
+            Debug.Log("smashed player"); 
             GameManager.Instance._blueFlag.transform.parent = null;
-
-            //Reset _blueFlagPickedUp to false
             GameManager.Instance._blueFlagPickedUp = false;
-
-            //Move the blue flag back to its original position
-            GameManager.Instance._blueFlag.transform.position = GameManager.Instance._blueFlagBasePosition.position;
-            GameManager.Instance._blueFlag.transform.rotation = GameManager.Instance._blueFlagBasePosition.rotation;
-        }
-        
-        if (other.CompareTag("BlueFlagBase") && GameManager.Instance._redFlagPickedUp)
-        {
+            _isBlueFlagPickedUp = false;
+            _blueFlagIsDropped = true;
             
+            GameManager.Instance._blueFlag.transform.position = GameManager.Instance._blueFlagDropped.transform.position;
+            GameManager.Instance._blueFlag.transform.rotation = GameManager.Instance._blueFlagDropped.transform.rotation;
+            
+            
+        }
+
+        if (other.CompareTag("Player") && _isRedFlagPickedUp)
+        {
+            Debug.Log("Dropped red flag"); 
+            GameManager.Instance._redFlag.transform.parent = null;
+            GameManager.Instance._redFlagPickedUp = false;
+            _isRedFlagPickedUp = false;
+            _redFlagIsDropped = true;
+            GameManager.Instance._redFlag.transform.position = GameManager.Instance._redFlagDropped.position;
+            GameManager.Instance._redFlag.transform.rotation = GameManager.Instance._redFlagDropped.rotation;
+            
+        }
+
+        if (other.CompareTag("BlueFlagBase") && _isRedFlagPickedUp)
+        {
             GameManager.Instance.EnemyReturnedRedFlagAtBase();
-            ChangeState(EnemyState.ChasePlayer);
+            _isRedFlagPickedUp = false;
+        }
+        if (other.CompareTag("BlueFlag") && _blueFlagIsDropped)
+        {
+            Debug.Log("Returned blue flag"); 
+            GameManager.Instance._blueFlag.transform.parent = null;
+            GameManager.Instance._blueFlagPickedUp = false;
+            _isBlueFlagPickedUp = false;
+            _blueFlagIsDropped = false;
+            
+            GameManager.Instance._blueFlag.transform.position = GameManager.Instance._blueFlagBasePosition.transform.position;
+            GameManager.Instance._blueFlag.transform.rotation = GameManager.Instance._blueFlagBasePosition.transform.rotation;
+            
+            
         }
         
         
     }
-
 }
 
 public enum EnemyState
@@ -156,3 +228,4 @@ public enum EnemyState
     ChaseFlag,
     ReturnFlag
 }
+

@@ -61,6 +61,12 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (other.CompareTag("BlueFlag"))
+        {
+            _carryingBlueFlag = true;
+            
+            
+        }
         if (other.CompareTag("RedFlagBase") && _carryingBlueFlag)
         {
             GameManager.Instance.PlayerReturnedBlueFlagAtBase();
